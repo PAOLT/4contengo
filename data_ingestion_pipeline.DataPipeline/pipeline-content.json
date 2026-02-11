@@ -1,0 +1,258 @@
+{
+  "properties": {
+    "activities": [
+      {
+        "type": "Lookup",
+        "typeProperties": {
+          "source": {
+            "type": "DelimitedTextSource",
+            "formatSettings": {
+              "type": "DelimitedTextReadSettings"
+            },
+            "storeSettings": {
+              "type": "LakehouseReadSettings",
+              "recursive": false,
+              "enablePartitionDiscovery": false
+            }
+          },
+          "datasetSettings": {
+            "type": "DelimitedText",
+            "typeProperties": {
+              "location": {
+                "type": "LakehouseLocation",
+                "folderPath": {
+                  "value": "jobs",
+                  "type": "Expression"
+                },
+                "fileName": {
+                  "value": "@pipeline()?.TriggerEvent?.FileName",
+                  "type": "Expression"
+                }
+              },
+              "columnDelimiter": ",",
+              "quoteChar": "\"",
+              "escapeChar": "\\",
+              "firstRowAsHeader": true,
+              "multiline": true
+            },
+            "schema": [],
+            "connectionSettings": {
+              "name": "contengo_LH",
+              "properties": {
+                "type": "Lakehouse",
+                "typeProperties": {
+                  "artifactId": "c67b8295-152a-9334-4036-9ff58c0a2d67",
+                  "workspaceId": "00000000-0000-0000-0000-000000000000",
+                  "rootFolder": "Files"
+                },
+                "externalReferences": {
+                  "connection": "bebbfc95-df9a-48b9-90bd-3f362f0abf42"
+                },
+                "annotations": []
+              }
+            },
+            "annotations": []
+          },
+          "firstRowOnly": false
+        },
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "name": "lookup_triggering_job",
+        "dependsOn": []
+      },
+      {
+        "type": "ForEach",
+        "typeProperties": {
+          "isSequential": true,
+          "items": {
+            "value": "@activity('lookup_triggering_job').output.value",
+            "type": "Expression"
+          },
+          "activities": [
+            {
+              "type": "Copy",
+              "typeProperties": {
+                "source": {
+                  "type": "DelimitedTextSource",
+                  "formatSettings": {
+                    "type": "DelimitedTextReadSettings"
+                  },
+                  "additionalColumns": [
+                    {
+                      "name": "lineage_id",
+                      "value": {
+                        "value": "@pipeline().RunId",
+                        "type": "Expression"
+                      }
+                    },
+                    {
+                      "name": "lineage_timestamp",
+                      "value": {
+                        "value": "@pipeline().TriggerTime",
+                        "type": "Expression"
+                      }
+                    },
+                    {
+                      "name": "lineage_job",
+                      "value": {
+                        "value": "@pipeline().TriggerId",
+                        "type": "Expression"
+                      }
+                    },
+                    {
+                      "name": "source_path",
+                      "value": {
+                        "value": "@item().filename",
+                        "type": "Expression"
+                      }
+                    }
+                  ],
+                  "storeSettings": {
+                    "type": "LakehouseReadSettings",
+                    "recursive": false,
+                    "enablePartitionDiscovery": false
+                  },
+                  "datasetSettings": {
+                    "type": "DelimitedText",
+                    "typeProperties": {
+                      "location": {
+                        "type": "LakehouseLocation",
+                        "fileName": {
+                          "value": "@item().filename",
+                          "type": "Expression"
+                        }
+                      },
+                      "columnDelimiter": ",",
+                      "quoteChar": "\"",
+                      "escapeChar": "\\",
+                      "firstRowAsHeader": true
+                    },
+                    "schema": [],
+                    "connectionSettings": {
+                      "name": "contengo_LH",
+                      "properties": {
+                        "type": "Lakehouse",
+                        "typeProperties": {
+                          "artifactId": "c67b8295-152a-9334-4036-9ff58c0a2d67",
+                          "workspaceId": "00000000-0000-0000-0000-000000000000",
+                          "rootFolder": "Files"
+                        },
+                        "externalReferences": {
+                          "connection": "bebbfc95-df9a-48b9-90bd-3f362f0abf42"
+                        },
+                        "annotations": []
+                      }
+                    },
+                    "annotations": []
+                  }
+                },
+                "sink": {
+                  "type": "LakehouseTableSink",
+                  "tableActionOption": "Append",
+                  "applyVOrder": true,
+                  "partitionOption": "None",
+                  "datasetSettings": {
+                    "type": "LakehouseTable",
+                    "typeProperties": {
+                      "schema": "bronze",
+                      "table": {
+                        "value": "@last(split(first(split(last(split(item().filename,'/')),'.')),'_'))",
+                        "type": "Expression"
+                      }
+                    },
+                    "schema": [],
+                    "connectionSettings": {
+                      "name": "contengo_LH",
+                      "properties": {
+                        "type": "Lakehouse",
+                        "typeProperties": {
+                          "artifactId": "c67b8295-152a-9334-4036-9ff58c0a2d67",
+                          "workspaceId": "00000000-0000-0000-0000-000000000000",
+                          "rootFolder": "Tables"
+                        },
+                        "externalReferences": {
+                          "connection": "bebbfc95-df9a-48b9-90bd-3f362f0abf42"
+                        },
+                        "annotations": []
+                      }
+                    },
+                    "annotations": []
+                  }
+                },
+                "translator": {
+                  "type": "TabularTranslator",
+                  "typeConversion": true,
+                  "typeConversionSettings": {
+                    "allowDataTruncation": true,
+                    "treatBooleanAsNumber": false
+                  }
+                },
+                "enableStaging": false
+              },
+              "policy": {
+                "timeout": "0.12:00:00",
+                "retry": 0,
+                "retryIntervalInSeconds": 30,
+                "secureInput": false,
+                "secureOutput": false
+              },
+              "name": "ingest_single_file",
+              "dependsOn": []
+            }
+          ]
+        },
+        "name": "ForEach_file_in_job",
+        "dependsOn": [
+          {
+            "activity": "lookup_triggering_job",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ]
+      },
+      {
+        "type": "WebActivity",
+        "typeProperties": {
+          "method": "POST",
+          "headers": {},
+          "body": {}
+        },
+        "externalReferences": {
+          "connection": "@https://api.fabric.microsoft.com/v1/workspaces/pipeline().parameters.ws_id/lakehouses/pipeline().parameters.lh_id/jobs/instances?jobType=RefreshMaterializedLakeViews"
+        },
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "name": "refresh MLV",
+        "dependsOn": [
+          {
+            "activity": "ForEach_file_in_job",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ]
+      }
+    ],
+    "parameters": {
+      "lh_id": {
+        "type": "string",
+        "defaultValue": "8c0a2d67-9ff5-4036-9334-152ac67b8295"
+      },
+      "ws_id": {
+        "type": "string",
+        "defaultValue": "8fd876fe-a361-4a65-a6ea-3149a2a2ad24"
+      }
+    }
+  }
+}
