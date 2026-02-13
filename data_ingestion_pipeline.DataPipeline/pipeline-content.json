@@ -36,7 +36,7 @@
               "multiline": true
             },
             "schema": [],
-            "connectionSettings": {
+            "linkedService": {
               "name": "contengo_LH",
               "properties": {
                 "type": "Lakehouse",
@@ -44,9 +44,6 @@
                   "artifactId": "c67b8295-152a-9334-4036-9ff58c0a2d67",
                   "workspaceId": "00000000-0000-0000-0000-000000000000",
                   "rootFolder": "Files"
-                },
-                "externalReferences": {
-                  "connection": "bebbfc95-df9a-48b9-90bd-3f362f0abf42"
                 },
                 "annotations": []
               }
@@ -133,7 +130,7 @@
                       "firstRowAsHeader": true
                     },
                     "schema": [],
-                    "connectionSettings": {
+                    "linkedService": {
                       "name": "contengo_LH",
                       "properties": {
                         "type": "Lakehouse",
@@ -141,9 +138,6 @@
                           "artifactId": "c67b8295-152a-9334-4036-9ff58c0a2d67",
                           "workspaceId": "00000000-0000-0000-0000-000000000000",
                           "rootFolder": "Files"
-                        },
-                        "externalReferences": {
-                          "connection": "bebbfc95-df9a-48b9-90bd-3f362f0abf42"
                         },
                         "annotations": []
                       }
@@ -166,7 +160,7 @@
                       }
                     },
                     "schema": [],
-                    "connectionSettings": {
+                    "linkedService": {
                       "name": "contengo_LH",
                       "properties": {
                         "type": "Lakehouse",
@@ -174,9 +168,6 @@
                           "artifactId": "c67b8295-152a-9334-4036-9ff58c0a2d67",
                           "workspaceId": "00000000-0000-0000-0000-000000000000",
                           "rootFolder": "Tables"
-                        },
-                        "externalReferences": {
-                          "connection": "bebbfc95-df9a-48b9-90bd-3f362f0abf42"
                         },
                         "annotations": []
                       }
@@ -215,44 +206,7 @@
             ]
           }
         ]
-      },
-      {
-        "type": "WebActivity",
-        "typeProperties": {
-          "method": "POST",
-          "headers": {},
-          "body": {}
-        },
-        "externalReferences": {
-          "connection": "@https://api.fabric.microsoft.com/v1/workspaces/pipeline().parameters.ws_id/lakehouses/pipeline().parameters.lh_id/jobs/instances?jobType=RefreshMaterializedLakeViews"
-        },
-        "policy": {
-          "timeout": "0.12:00:00",
-          "retry": 0,
-          "retryIntervalInSeconds": 30,
-          "secureInput": false,
-          "secureOutput": false
-        },
-        "name": "refresh MLV",
-        "dependsOn": [
-          {
-            "activity": "ForEach_file_in_job",
-            "dependencyConditions": [
-              "Succeeded"
-            ]
-          }
-        ]
       }
-    ],
-    "parameters": {
-      "lh_id": {
-        "type": "string",
-        "defaultValue": "8c0a2d67-9ff5-4036-9334-152ac67b8295"
-      },
-      "ws_id": {
-        "type": "string",
-        "defaultValue": "8fd876fe-a361-4a65-a6ea-3149a2a2ad24"
-      }
-    }
+    ]
   }
 }
